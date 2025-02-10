@@ -1,0 +1,31 @@
+{
+    "name": "auth-microservice",
+    "version": "1.0.0",
+    "description": "Микросервис авторизации на Node.js с использованием PostgreSQL, Redis и JWT",
+    "main": "src/server.js",
+    "scripts": {
+      "start": "node src/server.js",
+      "dev": "nodemon src/server.js",
+      "migrate": "knex migrate:latest",
+      "rollback": "knex migrate:rollback"
+    },
+    "dependencies": {
+      "express": "^4.18.2",
+      "dotenv": "^16.0.3",
+      "pg": "^8.7.1",
+      "ioredis": "^5.3.1",
+      "jsonwebtoken": "^9.0.0",
+      "bcrypt": "^5.1.0",
+      "knex": "^2.4.2",
+      "cors":"^2.8.5"
+    },
+    "devDependencies": {
+      "nodemon": "^3.0.1"
+    },
+    "engines": {
+      "node": ">=16.0.0"
+    },
+    "author": "nedloz",
+    "license": "MIT"
+  }
+  
