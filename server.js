@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const { connectDB } = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
+const errorHandler = require("./middleware/errorHandler");
 
 dotenv.config();
 
@@ -17,6 +18,8 @@ app.use(cors({
 
 // Используем маршруты
 app.use("/auth", authRoutes);
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
