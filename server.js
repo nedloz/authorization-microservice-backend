@@ -4,6 +4,7 @@ const cors = require("cors");
 const { connectDB } = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
 const errorHandler = require("./middleware/errorHandler");
+const logger = require("./config/logger");
 
 dotenv.config();
 
@@ -16,6 +17,11 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
+})
+
 // Используем маршруты
 app.use("/auth", authRoutes);
 
@@ -24,7 +30,7 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   await connectDB();
-  console.log(`Auth service running on port ${PORT}`);
+  logger.info(`Auth service running on port ${PORT}`);
 });
 
 

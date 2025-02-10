@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { pool } = require("../config/database");
 const redis = require("../config/redis");
+const logger = require("../config/logger");
 
 const SECRET_KEY = process.env.SECRET_KEY || "your_secret_key";
 const REFRESH_SECRET = process.env.REFRESH_SECRET || "your_refresh_secret";
@@ -19,6 +20,7 @@ const register = async (req, res) => {
     const { username, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     await pool.query("INSERT INTO users (username, hashed_password) VALUES ($1, $2)", [username, hashedPassword]);
+    logger.info(`User registered: ${username}`);
     res.json({ message: "User created successfully" });
   } catch (error) {
     next(error);
@@ -45,9 +47,8 @@ const login = async (req, res) => {
     }
   
     const { accessToken, refreshToken } = generateTokens(user.username);
-  
     await redis.setex(`refresh:${user.username}`, REFRESH_TOKEN_EXPIRE, refreshToken);
-  
+    logger.info(`User logged in: ${username}`);
     res.json({ accessToken, refreshToken, token_type: "bearer" });
   } catch (error) {
     next(error);
@@ -82,6 +83,7 @@ const refresh = async (req, res) => {
 const logout = async (req, res) => {
     try {
       await redis.del(`refresh:${req.user.username}`);
+      logger.info(`User logged out: ${username}`);
       res.json({ message: "Logged out successfully"});
     } catch (error) {
       next(error);
