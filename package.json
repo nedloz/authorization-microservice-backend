@@ -17,7 +17,9 @@
       "jsonwebtoken": "^9.0.0",
       "bcrypt": "^5.1.0",
       "knex": "^2.4.2",
-      "cors":"^2.8.5"
+      "cors":"^2.8.5",
+      "helmet": "^6.0.1",
+      "express-rate-limit": "^6.7.0"  
     },
     "devDependencies": {
       "nodemon": "^3.0.1"

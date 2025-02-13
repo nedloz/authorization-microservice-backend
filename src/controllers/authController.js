@@ -9,18 +9,18 @@ const REFRESH_SECRET = process.env.REFRESH_SECRET || "your_refresh_secret";
 const ACCESS_TOKEN_EXPIRE = "15m";
 const REFRESH_TOKEN_EXPIRE = 60 * 60 * 24 * 7;
 
-const generateTokens = (username) => {
-  const accessToken = jwt.sign({ username }, SECRET_KEY, { expiresIn: ACCESS_TOKEN_EXPIRE })
+const generateTokens = (username, role) => {
+  const accessToken = jwt.sign({ username, role }, SECRET_KEY, { expiresIn: ACCESS_TOKEN_EXPIRE })
   const refreshToken = jwt.sign({ username }, REFRESH_SECRET, { expiresIn: "7d" });
   return { accessToken, refreshToken };
 }
 
 const register = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, role } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query("INSERT INTO users (username, hashed_password) VALUES ($1, $2)", [username, hashedPassword]);
-    logger.info(`User registered: ${username}`);
+    await pool.query("INSERT INTO users (username, hashed_password, role) VALUES ($1, $2, $3)", [username, hashedPassword, role]);
+    logger.info(`User registered: ${username} with role: ${role || "user"}`);
     res.json({ message: "User created successfully" });
   } catch (error) {
     next(error);
@@ -48,7 +48,7 @@ const login = async (req, res) => {
   
     const { accessToken, refreshToken } = generateTokens(user.username);
     await redis.setex(`refresh:${user.username}`, REFRESH_TOKEN_EXPIRE, refreshToken);
-    logger.info(`User logged in: ${username}`);
+    logger.info(`User logged in: ${username} with role: ${user.role}`);
     res.json({ accessToken, refreshToken, token_type: "bearer" });
   } catch (error) {
     next(error);
