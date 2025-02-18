@@ -38,10 +38,13 @@ app.use("/auth", authRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, async () => {
-  await connectDB();
-  logger.info(`Auth service running on port ${PORT}`);
-});
+let server = null;
+if (process.env.NODE_ENV !== "test") {
+  server = app.listen(PORT, async () => {
+    await connectDB();
+    logger.info(`Auth service running on port ${PORT}`);
+  });
+}
 
 
-
+module.exports = { app, server };

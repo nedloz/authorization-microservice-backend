@@ -1,0 +1,50 @@
+services:
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://test_user:test_password@backend-db-1:5432/test_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SECRET_KEY: test_secret_key
+      REFRESH_SECRET: test_refresh_secret
+    depends_on:
+      - db
+      - redis
+    networks:
+      - auth-network
+    volumes:
+      - ./database/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    command: ["npm", "test"]  # <== Запускаем тесты внутри контейнера
+    
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: test_db
+    ports:
+      - "5433:5432"  # <== Используем другой порт, чтобы не конфликтовать с основной БД
+    networks:
+      - auth-network
+
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6380:6379"
+    networks:
+      - auth-network
+
+networks:
+  auth-network:
+    driver: bridge

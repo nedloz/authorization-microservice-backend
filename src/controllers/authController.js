@@ -9,48 +9,68 @@ const REFRESH_SECRET = process.env.REFRESH_SECRET || "your_refresh_secret";
 const ACCESS_TOKEN_EXPIRE = "15m";
 const REFRESH_TOKEN_EXPIRE = 60 * 60 * 24 * 7;
 
-const generateTokens = (username, role) => {
-  const accessToken = jwt.sign({ username, role }, SECRET_KEY, { expiresIn: ACCESS_TOKEN_EXPIRE })
+const generateTokens = (username) => {
+  const accessToken = jwt.sign({ username }, SECRET_KEY, { expiresIn: ACCESS_TOKEN_EXPIRE })
   const refreshToken = jwt.sign({ username }, REFRESH_SECRET, { expiresIn: "7d" });
   return { accessToken, refreshToken };
 }
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   try {
-    const { username, password, role } = req.body;
+    const { username, password, nickname } = req.body;
+
+    const exitingUser = await pool.query("SELECT * FROM users WHERE username = $1", [ username ]);
+    if (exitingUser.rows.length > 0) {
+      logger.warn(`Registration failed: username ${username} is already taken`);
+      return res.status(400).json({ error: "Username is already taken"});
+    }
+
+    const exitingNickname = await pool.query("SELECT * FROM users WHERE nickname =1$", [ nickname ]);
+    if (exitingNickname.rows.length > 0) {
+      logger.warn(`Registration failed:  nickname ${username} is already taken`);
+      return res.status(400).json({ error: "Nickname is already taken"});
+    }
+    
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query("INSERT INTO users (username, hashed_password, role) VALUES ($1, $2, $3)", [username, hashedPassword, role]);
-    logger.info(`User registered: ${username} with role: ${role || "user"}`);
+    await pool.query("INSERT INTO users (username, hashed_password) VALUES ($1, $2, $3)", [
+      username, 
+      hashedPassword,
+      nickname, 
+    ]);
+
+    logger.info(`User registered: ${username} with nickname: ${nickname}`);
     res.json({ message: "User created successfully" });
+
   } catch (error) {
+    console.error("Registration error: ", error);
     next(error);
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const userResult = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
   
     if (userResult.rows.length === 0) {
-      const error = new Error("Invalid credentials");
-      error.statusCode = 401;
-      throw error;
+      logger.warn(`Login failed: user ${username} not found`);
+      return res.status(401).json({ error: "Invalid username or password"});
     }
   
     const user = userResult.rows[0];
     const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
     if (!isPasswordValid) {
-      const error = new Error("Invalid credentials");
-      error.statusCode = 401;
-      throw error;
+      logger.warn(`Login failed: incorrect password for user ${username}`);
+      return res.status(401).json({ error: "Invalid username or password"});
     }
   
     const { accessToken, refreshToken } = generateTokens(user.username);
     await redis.setex(`refresh:${user.username}`, REFRESH_TOKEN_EXPIRE, refreshToken);
-    logger.info(`User logged in: ${username} with role: ${user.role}`);
+    logger.info(`User logged in: ${username}`);
     res.json({ accessToken, refreshToken, token_type: "bearer" });
   } catch (error) {
+    console.error("Login error: ", error);
     next(error);
   }
 };
@@ -90,11 +110,10 @@ const logout = async (req, res) => {
     }
 }
 
-const protectedRoute = async (req, res) => {
-  res.json({ 
-    message: `Hello, ${req.user.username}`,
-    token_expires_in: ACCESS_TOKEN_EXPIRE
-  });
-};
+const validateToken = async (req, res) => {
+  res.json({ valid: true, username: req.user.username });
+}
 
-module.exports = { register, login, logout, refresh, protectedRoute };
+
+
+module.exports = { register, login, logout, refresh, validateToken };
