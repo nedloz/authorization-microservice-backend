@@ -47,6 +47,16 @@ describe("Auth Api", () => {
         expect(res.StatusCode).toBe(200);
         expect(res.body).toHaveProperty("accessToken");
     }, 10000);
+    
+    test("Удаление аккаунта", async () => {
+        const res = await request(app)
+            .delete("/auth/delete-account")
+            .set("Authorization", `Bearer ${accessToken}`)
+            .send({ password: "test_password" });
+    
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe("Аккаунт успешно удалён.");
+    });
 });
 
 afterAll((done) => {
