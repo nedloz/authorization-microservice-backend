@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://auth_user:auth_password@backend-db-1:5432/auth_db
+      DATABASE_URL: postgresql://test_user:test_password@backend-db-1:5432/test_db
       REDIS_HOST: redis
       REDIS_PORT: 6379
       SECRET_KEY: super_secret_key
@@ -23,9 +23,9 @@ services:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_USER: auth_user
-      POSTGRES_PASSWORD: auth_password
-      POSTGRES_DB: auth_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: test_db
     ports:
       - "5432:5432"
     networks:

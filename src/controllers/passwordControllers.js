@@ -1,7 +1,7 @@
 const { pool } = require("../config/database");
 const redisClient = require("../config/redis");
 const crypto = require("crypto");
-const sentEmail = require("../utils/sendEmail");
+const sendEmail = require("../utils/sendEmail");
 const logger = require("../config/logger");
 const bcrypt = require("bcrypt");
 
@@ -48,4 +48,4 @@ const resetPassword = async (req, res, next) => {
     }
 }
 
-module.exports = { forgotPassword };
+module.exports = { forgotPassword, resetPassword };

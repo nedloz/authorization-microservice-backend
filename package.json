@@ -21,6 +21,7 @@
         "ioredis": "^5.3.1",
         "jsonwebtoken": "^9.0.0",
         "knex": "^2.4.2",
+        "nodemailer": "^6.10.0",
         "pg": "^8.7.1",
         "winston": "^3.17.0"
     },
